@@ -208,7 +208,7 @@ http://127.0.0.1:5000/login
 **USER**
 
 - Dashboard Monitoring.
-- Speedtest.
+- Speedtest.WHATSSAPP:+6283891828258 TELEGRA
 - Share Files.
 
 ## 8. Security
@@ -227,5 +227,5 @@ EMAIL:marioyosefsoegiharto@gmail.com
 
 WHATSSAPP:+6283891828258
 
-TELEGRAM:@rioprojectofficial
+TELEGRAM:t.me/rioprojectofficial
 
