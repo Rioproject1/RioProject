@@ -224,6 +224,8 @@ Kami akan selalu memperbarui project ini~
 Jika menemukan bug atau eror segera hubungi suport kami di bawah ini
 
 EMAIL:marioyosefsoegiharto@gmail.com
+
 WHATSSAPP:+6283891828258
+
 TELEGRAM:@rioprojectofficial
 
