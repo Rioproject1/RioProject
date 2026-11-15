@@ -217,4 +217,12 @@ http://127.0.0.1:5000/login
 - Role-Based Access Control (RBAC)
 - Admin-only API Protection
 
-**Developer:** Rio-Project
+**Developer:** Rio-Project 
+KAMI AKAN SELALU MEMPERBARUI RioOS SECARA RUTIN
+
+JIKA MENEMUKAN BUG ATAU EROR PADA RioOS HUBUNGI MELALUI EMAIL,WHATSAPP,DAN TELEGRAM
+
+EMAIL:marioyosefsoegiharto@gmail.com
+WHATSSAPP:+6283891828258
+TELEGRAM:@rioprojectofficial
+
