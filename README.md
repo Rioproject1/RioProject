@@ -219,9 +219,9 @@ http://127.0.0.1:5000/login
 - Admin-only API Protection
 
 **Developer:** Rio-Project 
-KAMI AKAN SELALU MEMPERBARUI RioOS SECARA RUTIN
+Kami akan selalu memperbarui project ini~
 
-JIKA MENEMUKAN BUG ATAU EROR PADA RioOS HUBUNGI MELALUI EMAIL,WHATSAPP,DAN TELEGRAM
+Jika menemukan bug atau eror segera hubungi suport kami di bawah ini
 
 EMAIL:marioyosefsoegiharto@gmail.com
 WHATSSAPP:+6283891828258
