@@ -1,6 +1,7 @@
 # RioProject
 RioOS adalah dashboard management untuk server skala kecil dan sedang.. 
 RioOS dapat di jalan kan di berbagai perangkat mulai dari STB Hingga komputer high end.
+
 <img width="1334" height="642" alt="image" src="https://github.com/user-attachments/assets/bdba82ce-7131-4eaa-93c7-7e2d52133b86" />
 <img width="1333" height="637" alt="image" src="https://github.com/user-attachments/assets/3b6a34f2-0c21-45a2-b959-9489f4c121b6" />
 
@@ -33,7 +34,7 @@ RioOS/
 
 
 Berikut cara menggunakan RioOS beserta dengan pkg nya 
-
+MOHON BACA HINGGA AKHIR
 # RioOS Dashboard Server Management
 
 RioOS adalah aplikasi web untuk mengelola, memantau, dan menjalankan berbagai layanan server Linux melalui dashboard berbasis web.
