@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RioOS Ultimate</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Dark Mode (Default) */
+            --text: #ffffff; --text-muted: #cbd5e1; --bg-color: #0f172a;
+            --accent: #38bdf8; --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --purple: #a855f7; --orange: #f97316;
+            /* Alpha dinaikkan karena blur (backdrop-filter) dihapus demi performa */
+            --glass: rgba(15, 23, 42, 0.85); --glass-hover: rgba(30, 41, 59, 0.95); --border: rgba(255, 255, 255, 0.15);
+        }
+        body.light-mode {
+            /* Light Mode */
+            --text: #1e293b; --text-muted: #64748b; --bg-color: #f1f5f9;
+            --glass: rgba(255, 255, 255, 0.9); --glass-hover: rgba(255, 255, 255, 1); --border: rgba(0, 0, 0, 0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body, .sidebar, .topbar, .card, .box { transition: background-color 0.3s, color 0.3s; }
+        body { background-color: var(--bg-color); background-image: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), url('https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1280'); background-size: cover; background-position: center; color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+        body.light-mode { background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1280'); }
+        
+        .sidebar { width: 240px; background: var(--glass); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; z-index: 10; }
+        .logo { padding: 0 20px 20px; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .logo i { color: var(--accent); }
+        .menu-item { padding: 15px 25px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); cursor: pointer; font-size: 14px; font-weight: 600; border-left: 3px solid transparent; }
+        .menu-item:hover, .menu-item.active { background: var(--glass-hover); color: var(--accent); border-left-color: var(--accent); }
+        .menu-item i { width: 20px; text-align: center; font-size: 18px; }
+        
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; z-index: 5; }
+        .topbar { height: 70px; background: var(--glass); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; position: sticky; top: 0; z-index: 10; }
+        .sys-info { font-size: 13px; display: flex; gap: 20px; font-weight: 600; align-items: center; }
+        .theme-toggle { cursor: pointer; font-size: 20px; color: var(--yellow); }
+        
+        .tab-content { display: none; padding: 30px; flex-direction: column; gap: 20px; animation: fadeIn 0.3s; }
+        .tab-content.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; }
+        .card, .box { background: var(--glass); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 8px 32px 0 rgba(0,0,0,0.2); }
+        .card-header { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 12px; font-weight: 700; margin-bottom: 10px; text-transform: uppercase;}
+        .card-value { font-size: 26px; font-weight: 800; }
+        .card-sub { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+        .progress-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-top: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 10px; }
+        
+        .details-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .box h3 { font-size: 15px; margin-bottom: 15px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
+        /* Wrapper chart dengan tinggi tetap, biar Chart.js nggak resize terus-menerus */
+        .chart-wrap { position: relative; height: 220px; width: 100%; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 12px 10px; color: var(--text-muted); border-bottom: 1px solid var(--border); font-size: 11px;}
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
+        
+        .btn { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; font-size: 12px; color: white; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-danger { background: var(--red); }
+        .btn-success { background: var(--green); }
+        .btn-warning { background: var(--yellow); color: #000; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }
+        .badge-running { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+        .badge-stopped { background: rgba(239, 68, 68, 0.2); color: var(--red); border: 1px solid var(--red); }
+
+        .terminal-box { background: rgba(0,0,0,0.8); border-radius: 10px; padding: 15px; font-family: monospace; }
+        .terminal-output { color: #0f0; height: 250px; overflow-y: auto; white-space: pre-wrap; font-size: 13px; margin-bottom: 10px; }
+        .terminal-input-wrapper { display: flex; gap: 10px; }
+        .terminal-input { flex: 1; background: transparent; border: none; color: #0f0; font-family: monospace; outline: none; }
+        
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; justify-content: space-around; padding: 10px 0; border-right: none; border-top: 1px solid var(--border); order: 2; height: 65px; position: fixed; bottom: 0; background: var(--glass); }
+            .logo { display: none; }
+            .menu-item { padding: 10px; flex-direction: column; gap: 5px; font-size: 10px; border-left: none; }
+            .main-content { order: 1; padding-bottom: 70px; }
+            .details-grid { grid-template-columns: 1fr; }
+            .sys-info { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo"><i class="fa-solid fa-server"></i> <span>RioOS</span></div>
+        <div class="menu-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></div>
+        <div class="menu-item admin-only" onclick="switchTab('network', this)"><i class="fa-solid fa-network-wired"></i> <span>Network</span></div>
+        <div class="menu-item" onclick="switchTab('speedtest', this)"><i class="fa-solid fa-gauge-high"></i> <span>Speedtest</span></div>
+        <div class="menu-item admin-only" onclick="switchTab('terminal', this)"><i class="fa-solid fa-terminal"></i> <span>Terminal</span></div>
+        <div class="menu-item admin-only" onclick="switchTab('tasks', this)"><i class="fa-solid fa-list-check"></i> <span>Task Manager</span></div>
+        <div class="menu-item admin-only" onclick="switchTab('apps', this)"><i class="fa-solid fa-cubes"></i> <span>Apps</span></div>
+        <div class="menu-item" onclick="switchTab('files', this)"><i class="fa-solid fa-cloud"></i> <span>Files</span></div>
+        <div class="menu-item admin-only" onclick="switchTab('users', this)"><i class="fa-solid fa-users"></i> <span>Users</span></div>
+    </div>
+
+    <div class="main-content">
+        <div class="topbar">
+            <h2 id="page-title">Overview</h2>
+            <div class="sys-info">
+                <span><i class="fa-solid fa-microchip"></i> {{ hostname }}</span>
+                <span><i class="fa-regular fa-clock"></i> <span id="live-clock">00:00:00</span></span>
+                <span id="account-label" style="font-size:12px;color:var(--text-muted);">{{ user.username }} · {{ user.role|upper }}</span>
+                <button class="btn btn-danger" onclick="logout()" style="margin-left:10px;">Logout</button>
+                <i class="fa-solid fa-moon theme-toggle" id="theme-btn" onclick="toggleTheme()"></i>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="card">
+                    <div class="card-header"><span>CPU</span> <i class="fa-solid fa-microchip" style="color: var(--accent);"></i></div>
+                    <div class="card-value" id="cpu-val">0%</div>
+                    <div class="card-sub" id="cpu-sub">0 Cores</div>
+                    <div class="progress-bar"><div class="progress-fill" id="cpu-bar" style="background: var(--accent);"></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>Temp</span> <i class="fa-solid fa-temperature-half" style="color: var(--orange);"></i></div>
+                    <div class="card-value" id="temp-val" style="color: var(--orange);">0°C</div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>RAM</span> <i class="fa-solid fa-memory" style="color: var(--green);"></i></div>
+                    <div class="card-value" id="ram-val">0%</div>
+                    <div class="card-sub" id="ram-sub">0 MB / 0 MB</div>
+                    <div class="progress-bar"><div class="progress-fill" id="ram-bar" style="background: var(--green);"></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>SWAP</span> <i class="fa-solid fa-layer-group" style="color: var(--purple);"></i></div>
+                    <div class="card-value" id="swap-val">0%</div>
+                    <div class="card-sub" id="swap-sub">0 MB / 0 MB</div>
+                    <div class="progress-bar"><div class="progress-fill" id="swap-bar" style="background: var(--purple);"></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>Disk (/)</span> <i class="fa-solid fa-hard-drive" style="color: var(--yellow);"></i></div>
+                    <div class="card-value" id="disk-val">0%</div>
+                    <div class="card-sub" id="disk-sub">0 GB / 0 GB</div>
+                    <div class="progress-bar"><div class="progress-fill" id="disk-bar" style="background: var(--yellow);"></div></div>
+                </div>
+            </div>
+            <div class="details-grid">
+                <div class="box"><h3>Real-time Bandwidth</h3><div class="chart-wrap"><canvas id="bandwidthChart"></canvas></div></div>
+                <div class="box">
+                    <h3>Status Jaringan</h3>
+                    <p style="font-size:13px; margin-bottom:10px;"><b>ISP:</b> <span id="isp-info" style="color:var(--accent);">Loading...</span></p>
+                    <ul id="iface-list" style="list-style:none; font-size:13px; color:var(--text-muted);"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- NETWORK GUARDIAN -->
+        <div id="tab-network" class="tab-content">
+            <div class="box">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3>Connected Devices</h3>
+                    <button class="btn btn-primary" onclick="scanNetwork()" id="btn-scan"><i class="fa-solid fa-radar"></i> Scan Jaringan</button>
+                </div>
+                <table id="device-table">
+                    <thead><tr><th>Nama Device</th><th>IP Address</th><th>MAC Address</th><th>Status</th><th>Aksi</th></tr></thead>
+                    <tbody><tr><td colspan="5" style="text-align:center;">Klik Scan untuk mendeteksi device...</td></tr></tbody>
+                </table>
+            </div>
+            <div class="box">
+                <h3>Log Kejadian (History)</h3>
+                <pre id="net-logs" style="background:rgba(0,0,0,0.3); color:#0f0; padding:15px; border-radius:10px; font-size:12px; height:200px; overflow-y:auto;">Memuat log...</pre>
+            </div>
+        </div>
+
+        <!-- SPEEDTEST -->
+        <div id="tab-speedtest" class="tab-content">
+            <div class="box">
+                <h3>Network Speedtest (Ookla)</h3>
+                <p style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">Tes kecepatan internet dari server ini.</p>
+                <button class="btn btn-primary" onclick="runSpeedtest()" id="btn-speedtest"><i class="fa-solid fa-gauge-high"></i> Mulai Speedtest</button>
+                <div id="speedtest-result" style="display:none; margin-top:20px; gap:20px; text-align:center;">
+                    <div style="flex:1; background:rgba(0,0,0,0.3); padding:15px; border-radius:10px;">
+                        <div style="font-size:12px; color:var(--text-muted);">DOWNLOAD</div>
+                        <div style="font-size:24px; font-weight:bold; color:var(--green);"><span id="st-down">0</span> <span style="font-size:14px;">Mbps</span></div>
+                    </div>
+                    <div style="flex:1; background:rgba(0,0,0,0.3); padding:15px; border-radius:10px;">
+                        <div style="font-size:12px; color:var(--text-muted);">UPLOAD</div>
+                        <div style="font-size:24px; font-weight:bold; color:var(--accent);"><span id="st-up">0</span> <span style="font-size:14px;">Mbps</span></div>
+                    </div>
+                    <div style="flex:1; background:rgba(0,0,0,0.3); padding:15px; border-radius:10px;">
+                        <div style="font-size:12px; color:var(--text-muted);">PING</div>
+                        <div style="font-size:24px; font-weight:bold; color:var(--yellow);"><span id="st-ping">0</span> <span style="font-size:14px;">ms</span></div>
+                    </div>
+                </div>
+                <div id="st-server" style="margin-top:15px; text-align:center; color:var(--text-muted); font-size:12px;"></div>
+            </div>
+        </div>
+
+        <!-- TERMINAL -->
+        <div id="tab-terminal" class="tab-content">
+            <div class="box">
+                <h3>Rio Web Terminal</h3>
+                <div class="terminal-box">
+                    <div class="terminal-output" id="term-out">Ketik perintah Linux (butuh sudo kalau butuh akses root).</div>
+                    <div class="terminal-input-wrapper">
+                        <span style="color: var(--accent); font-weight:bold; font-family:monospace;">rio@server:~$</span>
+                        <input type="text" class="terminal-input" id="term-in" onkeydown="if(event.key === 'Enter') sendCmd()" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TASKS -->
+        <div id="tab-tasks" class="tab-content">
+            <div class="box">
+                <h3>Process Manager</h3>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table id="task-table"><thead><tr><th>PID</th><th>Nama Proses</th><th>CPU %</th><th>RAM %</th><th>Aksi</th></tr></thead><tbody></tbody></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- APPS -->
+        <div id="tab-apps" class="tab-content">
+            <div class="box">
+                <h3>Tambah Aplikasi</h3>
+                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                    <input type="text" id="new-app-id" placeholder="ID" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text);">
+                    <input type="text" id="new-app-name" placeholder="Nama" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text);">
+                    <input type="text" id="new-app-cmd" placeholder="Perintah (python3 wa.py)" style="flex:2; padding:10px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text);">
+                    <button class="btn btn-success" onclick="addApp()">Tambah</button>
+                </div>
+                <table id="app-table"><thead><tr><th>Aplikasi</th><th>Status</th><th>Aksi</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+
+        <!-- FILES -->
+        <div id="tab-files" class="tab-content">
+            <div class="box">
+                <h3>File Sharing</h3>
+                <div style="border:2px dashed var(--border); padding:20px; text-align:center; border-radius:10px; margin-bottom:20px; cursor:pointer;" onclick="document.getElementById('file-input').click()">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 30px; color: var(--accent);"></i>
+                    <p>Upload File</p>
+                    <input type="file" id="file-input" style="display: none;" onchange="uploadFile()">
+                </div>
+                <table id="file-table"><thead><tr><th>Nama File</th><th>Ukuran</th><th>Aksi</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+        <!-- USER MANAGEMENT (ADMIN ONLY) -->
+        <div id="tab-users" class="tab-content">
+            <div class="box">
+                <h3>Manajemen User</h3>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:15px;">Buat akun user, izinkan akses, nonaktifkan, reset password, atau hapus akun.</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+                    <input id="user-new-name" placeholder="Username" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);">
+                    <input id="user-new-password" type="password" placeholder="Password (min. 10 karakter)" style="padding:10px;min-width:230px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);">
+                    <button class="btn btn-success" onclick="createUser()">Buat User</button>
+                </div>
+                <table id="users-table"><thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CURRENT_ROLE = {{ user.role|tojson }};
+        if (CURRENT_ROLE !== 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+
+        async function logout() {
+            await fetch('/api/auth/logout', {method:'POST'});
+            window.location.href = '/login';
+        }
+        async function loadUsers() {
+            const res = await fetch('/api/admin/users');
+            if (!res.ok) return alert('Tidak memiliki izin.');
+            const users = await res.json();
+            const tbody = document.querySelector('#users-table tbody');
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                const status = u.active ? '<span class="badge badge-running">Diizinkan</span>' : '<span class="badge badge-stopped">Nonaktif</span>';
+                const toggleLabel = u.active ? 'Nonaktifkan' : 'Izinkan';
+                const toggleClass = u.active ? 'btn-warning' : 'btn-success';
+                tbody.innerHTML += `<tr><td><b>${escapeHtml(u.username)}</b></td><td>${u.role}</td><td>${status}</td>
+                <td>${u.role === 'user' ? `<button class="btn ${toggleClass}" onclick="toggleUser('${encodeURIComponent(u.username)}', ${!u.active})">${toggleLabel}</button>
+                <button class="btn btn-primary" onclick="resetUserPassword('${encodeURIComponent(u.username)}')">Reset Password</button>
+                <button class="btn btn-danger" onclick="removeUser('${encodeURIComponent(u.username)}')">Hapus</button>` : '—'}</td></tr>`;
+            });
+        }
+        function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        async function createUser() {
+            const username = document.getElementById('user-new-name').value.trim();
+            const password = document.getElementById('user-new-password').value;
+            const res = await fetch('/api/admin/users', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,active:true})});
+            const data = await res.json();
+            if (!res.ok) return alert(data.error || 'Gagal membuat user.');
+            document.getElementById('user-new-name').value = '';
+            document.getElementById('user-new-password').value = '';
+            loadUsers(); alert('User berhasil dibuat dan diizinkan.');
+        }
+        async function toggleUser(username, active) {
+            const res = await fetch('/api/admin/users/' + username, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active})});
+            if (!res.ok) { const d=await res.json(); return alert(d.error || 'Gagal.'); } loadUsers();
+        }
+        async function resetUserPassword(username) {
+            const password = prompt('Masukkan password baru (minimal 10 karakter):');
+            if (!password) return;
+            const res = await fetch('/api/admin/users/' + username, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})});
+            const d = await res.json(); if (!res.ok) return alert(d.error || 'Gagal.'); alert('Password diperbarui.');
+        }
+        async function removeUser(username) {
+            if (!confirm('Hapus akun ini?')) return;
+            const res = await fetch('/api/admin/users/' + username, {method:'DELETE'});
+            if (!res.ok) { const d=await res.json(); return alert(d.error || 'Gagal.'); } loadUsers();
+        }
+
+        // --- THEME TOGGLE ---
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            document.getElementById('theme-btn').className = isLight ? 'fa-solid fa-sun theme-toggle' : 'fa-solid fa-moon theme-toggle';
+            localStorage.setItem('rio_theme', isLight ? 'light' : 'dark');
+        }
+        if(localStorage.getItem('rio_theme') === 'light') toggleTheme();
+
+        // --- CLOCK ---
+        setInterval(() => { if (!document.hidden) document.getElementById('live-clock').innerText = new Date().toLocaleTimeString('id-ID', { hour12: false }); }, 1000);
+
+        function switchTab(tabId, element) {
+            if (CURRENT_ROLE !== 'admin' && !['dashboard', 'speedtest', 'files'].includes(tabId)) return;
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active'); element.classList.add('active');
+            const titles = { 'dashboard': 'Overview', 'network': 'Network Guardian', 'speedtest': 'Speedtest', 'terminal': 'Terminal', 'tasks': 'Task Manager', 'apps': 'App Manager', 'files': 'File Manager', 'users': 'Manajemen User' };
+            document.getElementById('page-title').innerText = titles[tabId];
+            
+            if(tabId === 'apps') loadApps(); 
+            if(tabId === 'tasks') loadProcesses(); 
+            if(tabId === 'terminal') document.getElementById('term-in').focus(); 
+            if(tabId === 'files') loadFiles();
+            if(tabId === 'network') loadNetworkLogs();
+            if(tabId === 'users') loadUsers();
+        }
+
+        // --- CHART JS (BANDWIDTH) ---
+        const ctx = document.getElementById('bandwidthChart').getContext('2d');
+        const bwChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [
+                    { label: 'Download (KB/s)', data: Array(20).fill(0), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.3, pointRadius: 0 },
+                    { label: 'Upload (KB/s)', data: Array(20).fill(0), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)', fill: true, tension: 0.3, pointRadius: 0 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, x: { display: false } } }
+        });
+
+        // --- UPDATE STATS ---
+        async function updateStats() {
+            try {
+                const res = await fetch('/api/stats'); const data = await res.json();
+                document.getElementById('cpu-val').innerText = data.cpu.usage.toFixed(1) + '%'; document.getElementById('cpu-sub').innerText = `${data.cpu.cores} Cores` + (data.cpu.freq > 0 ? ` · ${data.cpu.freq} MHz` : '');
+                document.getElementById('cpu-bar').style.width = data.cpu.usage + '%';
+                document.getElementById('temp-val').innerText = (data.cpu.temp > 0 ? data.cpu.temp : '--') + '°C';
+                document.getElementById('ram-val').innerText = data.ram.percent + '%'; document.getElementById('ram-sub').innerText = `${data.ram.used} MB / ${data.ram.total} MB`; document.getElementById('ram-bar').style.width = data.ram.percent + '%';
+                document.getElementById('swap-val').innerText = data.swap.percent + '%'; document.getElementById('swap-sub').innerText = data.swap.total === 0 ? 'Tidak Aktif' : `${data.swap.used} MB / ${data.swap.total} MB`; document.getElementById('swap-bar').style.width = data.swap.percent + '%';
+                document.getElementById('disk-val').innerText = data.disk.percent + '%'; document.getElementById('disk-sub').innerText = `${data.disk.used} GB / ${data.disk.total} GB`; document.getElementById('disk-bar').style.width = data.disk.percent + '%';
+                
+                // Network Info
+                document.getElementById('isp-info').innerText = data.network.isp;
+                const ifaces = data.network.interfaces.map(i => `<li><i class="fa-solid fa-network-wired"></i> ${i.name} : ${i.ip}</li>`).join('');
+                document.getElementById('iface-list').innerHTML = ifaces;
+
+                // Chart
+                bwChart.data.datasets[0].data.shift(); bwChart.data.datasets[0].data.push(data.net.down / 1024);
+                bwChart.data.datasets[1].data.shift(); bwChart.data.datasets[1].data.push(data.net.up / 1024);
+                bwChart.update('none');
+            } catch (e) { console.log(e); }
+        }
+
+        // --- NETWORK GUARDIAN ---
+        async function scanNetwork() {
+            const btn = document.getElementById('btn-scan'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Scanning...'; btn.disabled = true;
+            const res = await fetch('/api/network/scan'); const data = await res.json();
+            const tbody = document.querySelector('#device-table tbody'); tbody.innerHTML = '';
+            
+            if(data.error) { alert("Error: " + data.error); }
+            else if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Tidak ada device terdeteksi.</td></tr>`; }
+            else {
+                data.forEach(d => {
+                    let badge = d.status === 'allowed' ? '<span class="badge badge-running">Allowed</span>' : '<span class="badge badge-stopped">Blocked</span>';
+                    let btnAction = d.status === 'allowed' 
+                        ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="deviceAction('${d.mac}', 'block')">Block</button>`
+                        : `<button class="btn btn-success" style="padding:4px 8px; font-size:10px;" onclick="deviceAction('${d.mac}', 'allow')">Allow</button>`;
+                    
+                    tbody.innerHTML += `<tr>
+                        <td><b>${d.name}</b> <button class="btn" style="padding:2px 6px; font-size:10px; background:var(--glass-hover); color:var(--text);" onclick="renameDevice('${d.mac}', '${d.name}')"><i class="fa-solid fa-pen"></i></button></td>
+                        <td>${d.ip}</td>
+                        <td style="font-family:monospace;">${d.mac}</td>
+                        <td>${badge}</td>
+                        <td>${btnAction}</td>
+                    </tr>`;
+                });
+            }
+            btn.innerHTML = '<i class="fa-solid fa-radar"></i> Scan Jaringan'; btn.disabled = false;
+            loadNetworkLogs();
+        }
+
+        async function deviceAction(mac, action) {
+            await fetch(`/api/network/device/${mac}/${action}`, {method: 'POST'});
+            scanNetwork(); // Refresh
+        }
+
+        async function renameDevice(mac, oldName) {
+            const newName = prompt("Masukkan nama baru untuk device ini:", oldName);
+            if(newName && newName !== oldName) {
+                await fetch(`/api/network/device/${mac}/rename`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: newName})
+                });
+                scanNetwork();
+            }
+        }
+
+        async function loadNetworkLogs() {
+            const res = await fetch('/api/network/logs'); const data = await res.json();
+            document.getElementById('net-logs').innerText = data.logs.join('') || "Belum ada log.";
+        }
+
+        // --- TERMINAL, TASKS, APPS, FILES ---
+        async function sendCmd() {
+            const input = document.getElementById('term-in'); const cmd = input.value.trim(); if(!cmd) return;
+            const out = document.getElementById('term-out'); out.innerText += `\nrio@server:~$ ${cmd}\n`; input.value = '';
+            try { const res = await fetch('/api/terminal', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cmd: cmd}) }); const data = await res.json(); out.innerText += data.output; out.scrollTop = out.scrollHeight; } catch(e) { out.innerText += "\nError."; }
+        }
+        async function loadProcesses() {
+            const res = await fetch('/api/processes'); const data = await res.json(); const tbody = document.querySelector('#task-table tbody'); tbody.innerHTML = '';
+            data.forEach(p => { tbody.innerHTML += `<tr><td>${p.pid}</td><td>${p.name}</td><td style="color:var(--accent)">${(p.cpu_percent||0).toFixed(1)}%</td><td style="color:var(--green)">${(p.memory_percent||0).toFixed(1)}%</td><td><button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="killProcess(${p.pid})">Kill</button></td></tr>`; });
+        }
+        async function killProcess(pid) { if(!confirm(`Matikan proses PID ${pid}?`)) return; await fetch(`/api/process/kill/${pid}`, {method: 'POST'}); loadProcesses(); }
+        async function loadApps() {
+            const res = await fetch('/api/apps'); const data = await res.json(); const tbody = document.querySelector('#app-table tbody'); tbody.innerHTML = '';
+            data.forEach(app => {
+                let badge = app.status === 'Running' ? '<span class="badge badge-running">Running</span>' : '<span class="badge badge-stopped">Stopped</span>';
+                let btn = app.status === 'Running' ? `<button class="btn btn-danger" onclick="stopApp('${app.id}')"><i class="fa-solid fa-stop"></i> Stop</button>` : `<button class="btn btn-primary" onclick="startApp('${app.id}')"><i class="fa-solid fa-play"></i> Start</button>`;
+                tbody.innerHTML += `<tr><td><b>${app.name}</b></td><td>${badge}</td><td>${btn} <button class="btn" style="background:#475569;" onclick="viewLogs('${app.id}')">Log</button> <button class="btn btn-danger" onclick="deleteApp('${app.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            });
+        }
+        async function addApp() {
+            const id = document.getElementById('new-app-id').value; const name = document.getElementById('new-app-name').value; const cmd = document.getElementById('new-app-cmd').value;
+            if(!id || !name || !cmd) return alert("Isi semua kolom wok!");
+            const res = await fetch('/api/apps/add', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, name, cmd}) });
+            if(res.ok) { document.getElementById('new-app-id').value = ''; document.getElementById('new-app-name').value = ''; document.getElementById('new-app-cmd').value = ''; loadApps(); }
+        }
+        async function deleteApp(id) { if(!confirm(`Hapus aplikasi ${id}?`)) return; await fetch(`/api/apps/delete/${id}`, {method: 'DELETE'}); loadApps(); }
+        async function startApp(id) { await fetch(`/api/apps/${id}/start`, {method: 'POST'}); loadApps(); }
+        async function stopApp(id) { await fetch(`/api/apps/${id}/stop`, {method: 'POST'}); loadApps(); }
+        async function viewLogs(id) { const res = await fetch(`/api/apps/${id}/logs`); const data = await res.json(); alert(data.logs || "Log kosong."); }
+        async function loadFiles() {
+            const res = await fetch('/api/files'); const data = await res.json(); const tbody = document.querySelector('#file-table tbody'); tbody.innerHTML = '';
+            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Kosong.</td></tr>`; } 
+            else { data.forEach(f => { const deleteAction = CURRENT_ROLE === 'admin' ? ` <button class="btn btn-danger" onclick="deleteFile('${f.name}')">Hapus</button>` : ''; tbody.innerHTML += `<tr><td>${escapeHtml(f.name)}</td><td>${f.size} MB</td><td><a href="/api/download/${encodeURIComponent(f.name)}" class="btn btn-success" style="text-decoration:none;">Download</a>${deleteAction}</td></tr>`; }); }
+        }
+        async function uploadFile() {
+            const fileInput = document.getElementById('file-input'); const formData = new FormData(); formData.append('file', fileInput.files[0]);
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            if(res.ok) { fileInput.value = ''; loadFiles(); alert("Upload Berhasil!"); }
+        }
+        async function deleteFile(filename) { if(!confirm(`Hapus ${filename}?`)) return; await fetch(`/api/delete/${filename}`, { method: 'DELETE' }); loadFiles(); }
+
+        // --- SPEEDTEST ---
+        async function runSpeedtest() {
+            const btn = document.getElementById('btn-speedtest'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Testing...'; btn.disabled = true;
+            const box = document.getElementById('speedtest-result'); const info = document.getElementById('st-server');
+            box.style.display = 'none'; info.innerText = 'Menjalankan speedtest... (sekitar 30-60 detik)';
+            try {
+                await fetch('/api/speedtest/start', { method: 'POST' });
+                let fails = 0;
+                while (true) {
+                    await new Promise(r => setTimeout(r, 1500));
+                    let s;
+                    try { const res = await fetch('/api/speedtest/status'); s = await res.json(); fails = 0; }
+                    catch (e) { if (++fails >= 5) throw new Error('Server tidak merespon. Cek terminal tempat app.py jalan, kemungkinan crash.'); continue; }
+                    if (s.status === 'done') {
+                        document.getElementById('st-down').innerText = s.result.download; document.getElementById('st-up').innerText = s.result.upload; document.getElementById('st-ping').innerText = s.result.ping;
+                        info.innerText = `Server: ${s.result.server}`; box.style.display = 'flex';
+                        break;
+                    }
+                    if (s.status === 'error') throw new Error(s.error);
+                }
+            } catch (e) { info.innerText = ''; alert('Gagal Speedtest: ' + e.message); }
+            btn.innerHTML = '<i class="fa-solid fa-gauge-high"></i> Mulai Speedtest'; btn.disabled = false;
+        }
+
+        // --- POLLING STATS ---
+        // setTimeout (bukan setInterval): request berikutnya nunggu yang sebelumnya selesai,
+        // jadi nggak numpuk kalau server lagi lambat. Berhenti otomatis kalau tab nggak dilihat.
+        async function statsLoop() {
+            if (!document.hidden) await updateStats();
+            setTimeout(statsLoop, 3000);
+        }
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) updateStats(); });
+        statsLoop();
+    </script>
+</body>
+</html>
